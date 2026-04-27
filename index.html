@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>BookFlix — Stream Your Next Read</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════
+   TOKENS
+══════════════════════════════════════════ */
+:root {
+  --red:      #e50914;
+  --red-dim:  #b20710;
+  --gold:     #f5c518;
+  --bg:       #080808;
+  --surface:  #141414;
+  --card:     #1a1a1a;
+  --border:   rgba(255,255,255,0.07);
+  --text:     #e8e8e8;
+  --muted:    #999;
+  --font-display: 'Bebas Neue', sans-serif;
+  --font-serif:   'DM Serif Display', serif;
+  --font-body:    'DM Sans', sans-serif;
+  --nav-h: 68px;
+  --ease: cubic-bezier(.25,.8,.25,1);
+}
+
+/* ══════════════════════════════════════════
+   RESET & BASE
+══════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  font-size:15px;
+  line-height:1.5;
+  overflow-x:hidden;
+  cursor:default;
+}
+a{text-decoration:none;color:inherit}
+img{display:block;max-width:100%}
+button{cursor:pointer;border:none;background:none;font-family:inherit;color:inherit}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:#111}
+::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:#555}
+
+/* ══════════════════════════════════════════
+   NOISE OVERLAY
+══════════════════════════════════════════ */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:.4;
+}
+
+/* ══════════════════════════════════════════
+   NAVBAR
+══════════════════════════════════════════ */
+.nav{
+  position:fixed;top:0;left:0;right:0;
+  height:var(--nav-h);
+  padding:0 48px;
+  display:flex;align-items:center;gap:32px;
+  z-index:100;
+  transition:background .4s var(--ease), box-shadow .4s;
+}
+.nav.scrolled{
+  background:rgba(8,8,8,.97);
+  box-shadow:0 1px 0 var(--border);
+}
+.nav-logo{
+  font-family:var(--font-display);
+  font-size:34px;
+  color:var(--red);
+  letter-spacing:3px;
+  flex-shrink:0;
+  text-shadow:0 0 40px rgba(229,9,20,.4);
+}
+.nav-logo span{
+  color:#fff;font-size:11px;
+  font-family:var(--font-body);
+  letter-spacing:4px;
+  display:block;
+  margin-top:-6px;
+  opacity:.5;
+}
+.nav-links{
+  display:flex;gap:24px;list-style:none;
+  font-size:13px;font-weight:500;
+  letter-spacing:.5px;
+}
+.nav-links li a{
+  opacity:.7;transition:opacity .2s;
+}
+.nav-links li a:hover,.nav-links li a.active{opacity:1;color:#fff}
+.nav-right{
+  margin-left:auto;
+  display:flex;align-items:center;gap:16px;
+}
+.nav-search-wrap{
+  position:relative;
+  display:flex;align-items:center;
+}
+.nav-search-wrap svg{
+  position:absolute;left:12px;
+  width:15px;height:15px;
+  fill:var(--muted);
+  pointer-events:none;
+  transition:fill .2s;
+}
+.nav-search-wrap:focus-within svg{fill:#fff}
+#search{
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:4px;
+  padding:8px 14px 8px 36px;
+  color:#fff;
+  font-family:var(--font-body);
+  font-size:13px;
+  width:200px;
+  transition:width .35s var(--ease), background .2s, border .2s;
+  outline:none;
+}
+#search::placeholder{color:var(--muted)}
+#search:focus{
+  width:280px;
+  background:rgba(255,255,255,.1);
+  border-color:rgba(255,255,255,.3);
+}
+.nav-avatar{
+  width:32px;height:32px;
+  border-radius:4px;
+  background:linear-gradient(135deg,var(--red),#ff6b35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;font-weight:700;letter-spacing:.5px;
+  flex-shrink:0;
+}
+
+/* ══════════════════════════════════════════
+   HERO
+══════════════════════════════════════════ */
+.hero{
+  position:relative;
+  height:92vh;min-height:580px;
+  overflow:hidden;
+  margin-top:0;
+}
+.hero-bg{
+  position:absolute;inset:0;
+  background-size:cover;
+  background-position:center 20%;
+  transition:background-image .8s var(--ease);
+  transform:scale(1.04);
+  animation:heroZoom 14s ease-in-out infinite alternate;
+}
+@keyframes heroZoom{
+  from{transform:scale(1.04)}
+  to{transform:scale(1.09)}
+}
+.hero-gradient{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(to right, rgba(8,8,8,.95) 28%, rgba(8,8,8,.4) 60%, transparent 100%),
+    linear-gradient(to top, rgba(8,8,8,1) 0%, rgba(8,8,8,.7) 18%, transparent 50%);
+}
+.hero-content{
+  position:relative;z-index:2;
+  display:flex;flex-direction:column;
+  justify-content:flex-end;
+  height:100%;
+  padding:0 64px 80px;
+  max-width:620px;
+}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--red);
+  padding:4px 12px;
+  border-radius:2px;
+  font-size:10px;font-weight:700;
+  letter-spacing:2.5px;
+  text-transform:uppercase;
+  margin-bottom:14px;
+  width:fit-content;
+}
+.hero-title{
+  font-family:var(--font-display);
+  font-size:clamp(52px,7vw,88px);
+  line-height:.92;
+  letter-spacing:1px;
+  margin-bottom:18px;
+  text-shadow:2px 4px 20px rgba(0,0,0,.7);
+}
+.hero-meta{
+  display:flex;align-items:center;gap:14px;
+  font-size:13px;
+  color:var(--muted);
+  margin-bottom:14px;
+}
+.hero-meta .match{color:#46d369;font-weight:600}
+.hero-meta .rating{
+  border:1px solid var(--muted);
+  padding:1px 6px;
+  font-size:11px;
+}
+.hero-desc{
+  font-size:15px;
+  line-height:1.65;
+  color:#ccc;
+  max-width:480px;
+  margin-bottom:28px;
+  display:-webkit-box;
+  -webkit-line-clamp:3;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.hero-author{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:28px;
+  letter-spacing:.5px;
+}
+.hero-author strong{color:#fff}
+.hero-btns{display:flex;gap:12px}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 26px;
+  border-radius:4px;
+  font-family:var(--font-body);
+  font-size:14px;font-weight:600;
+  letter-spacing:.3px;
+  transition:all .2s var(--ease);
+  cursor:pointer;
+}
+.btn-primary{
+  background:#fff;color:#000;
+}
+.btn-primary:hover{background:#ddd}
+.btn-secondary{
+  background:rgba(255,255,255,.15);
+  color:#fff;
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.15);
+}
+.btn-secondary:hover{background:rgba(255,255,255,.25)}
+.btn svg{width:18px;height:18px;fill:currentColor;flex-shrink:0}
+.hero-indicators{
+  position:absolute;bottom:80px;right:64px;
+  display:flex;gap:8px;z-index:3;
+}
+.hero-dot{
+  width:6px;height:6px;
+  border-radius:50%;
+  background:rgba(255,255,255,.3);
+  transition:all .3s;
+  cursor:pointer;
+}
+.hero-dot.active{
+  background:#fff;width:20px;border-radius:3px;
+}
+
+/* ══════════════════════════════════════════
+   SECTIONS
+══════════════════════════════════════════ */
+.sections{padding:0 48px 80px;margin-top:-60px;position:relative;z-index:2}
+
+.section{margin-bottom:48px}
+.section-header{
+  display:flex;align-items:baseline;gap:14px;
+  margin-bottom:18px;
+}
+.section-title{
+  font-family:var(--font-display);
+  font-size:22px;
+  letter-spacing:1px;
+  color:#fff;
+}
+.section-see-all{
+  font-size:12px;font-weight:600;
+  color:var(--red);
+  letter-spacing:.5px;
+  opacity:0;
+  transition:opacity .2s;
+  cursor:pointer;
+}
+.section-header:hover .section-see-all{opacity:1}
+
+/* ROW */
+.row{
+  display:flex;gap:10px;
+  overflow-x:auto;
+  padding-bottom:12px;
+  scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+}
+.row::-webkit-scrollbar{height:0}
+
+/* CARD */
+.card{
+  flex-shrink:0;
+  width:160px;
+  border-radius:4px;
+  overflow:visible;
+  position:relative;
+  cursor:pointer;
+  transition:transform .35s var(--ease), z-index 0s .35s;
+  z-index:1;
+}
+.card:hover{
+  transform:scale(1.32) translateY(-8px);
+  z-index:50;
+  transition:transform .35s var(--ease), z-index 0s 0s;
+}
+.card-img-wrap{
+  border-radius:4px;
+  overflow:hidden;
+  aspect-ratio:2/3;
+  background:#222;
+  position:relative;
+}
+.card img{
+  width:100%;height:100%;
+  object-fit:cover;
+  transition:filter .3s;
+}
+.card:hover .card-img-wrap{border-radius:4px 4px 0 0}
+.card-shine{
+  position:absolute;inset:0;
+  background:linear-gradient(135deg,rgba(255,255,255,.06) 0%,transparent 50%);
+  pointer-events:none;
+}
+
+/* CARD HOVER PANEL */
+.card-panel{
+  position:absolute;bottom:0;left:0;right:0;
+  background:#181818;
+  border-radius:0 0 4px 4px;
+  padding:12px;
+  opacity:0;transform:translateY(-2px);
+  transition:opacity .25s .05s, transform .25s .05s;
+  pointer-events:none;
+  border:1px solid rgba(255,255,255,.08);
+  border-top:none;
+  z-index:10;
+  box-shadow:0 14px 30px rgba(0,0,0,.8);
+}
+.card:hover .card-panel{
+  opacity:1;transform:translateY(0);
+  pointer-events:auto;
+}
+.card-panel-btns{
+  display:flex;align-items:center;gap:6px;
+  margin-bottom:8px;
+}
+.cp-btn{
+  width:28px;height:28px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .2s,transform .15s;
+  flex-shrink:0;
+}
+.cp-btn:hover{transform:scale(1.1)}
+.cp-btn svg{width:14px;height:14px;fill:currentColor}
+.cp-play{background:#fff;color:#000}
+.cp-play:hover{background:#eee}
+.cp-add{background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.4)}
+.cp-add:hover{border-color:#fff;background:rgba(255,255,255,.2)}
+.cp-info{
+  background:rgba(255,255,255,.12);
+  border:1.5px solid rgba(255,255,255,.4);
+  margin-left:auto;
+}
+.cp-info:hover{border-color:#fff;background:rgba(255,255,255,.2)}
+.card-panel-title{
+  font-size:11px;font-weight:700;
+  white-space:nowrap;overflow:hidden;
+  text-overflow:ellipsis;
+  margin-bottom:4px;
+}
+.card-panel-meta{
+  display:flex;gap:6px;
+  font-size:10px;color:var(--muted);
+  align-items:center;
+}
+.card-panel-cat{
+  border:1px solid rgba(255,255,255,.3);
+  padding:1px 5px;
+  font-size:9px;
+  text-transform:uppercase;
+  letter-spacing:.5px;
+}
+
+/* TOP 10 BADGE */
+.top-badge{
+  position:absolute;
+  bottom:-6px;left:-14px;
+  font-family:var(--font-display);
+  font-size:72px;
+  line-height:1;
+  color:transparent;
+  -webkit-text-stroke:3px #fff;
+  pointer-events:none;
+  z-index:5;
+  text-shadow:4px 4px 0 rgba(0,0,0,.7);
+  opacity:.9;
+}
+
+/* ══════════════════════════════════════════
+   GENRE CHIPS
+══════════════════════════════════════════ */
+.genre-strip{
+  display:flex;gap:8px;
+  flex-wrap:wrap;
+  padding:0 48px;
+  margin-bottom:8px;
+  margin-top:12px;
+}
+.genre-chip{
+  padding:7px 18px;
+  border-radius:20px;
+  font-size:12px;font-weight:600;
+  letter-spacing:.4px;
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.1);
+  color:var(--muted);
+  transition:all .2s var(--ease);
+}
+.genre-chip:hover,.genre-chip.active{
+  background:var(--red);
+  border-color:var(--red);
+  color:#fff;
+}
+
+/* ══════════════════════════════════════════
+   SEARCH RESULTS SECTION
+══════════════════════════════════════════ */
+#search-results-section{
+  padding:0 48px;
+  margin-bottom:32px;
+  display:none;
+}
+#search-results-section .section-title{margin-bottom:14px}
+.search-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:10px;
+}
+
+/* ══════════════════════════════════════════
+   MODAL
+══════════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,.8);
+  z-index:500;
+  opacity:0;pointer-events:none;
+  transition:opacity .3s;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.open{opacity:1;pointer-events:auto}
+.modal{
+  position:fixed;
+  top:50%;left:50%;
+  transform:translate(-50%,-44%) scale(.94);
+  width:min(860px,94vw);
+  max-height:90vh;
+  background:#181818;
+  border-radius:8px;
+  overflow:hidden;
+  z-index:501;
+  opacity:0;
+  transition:transform .35s var(--ease),opacity .35s;
+  box-shadow:0 30px 80px rgba(0,0,0,.9);
+}
+.modal.open{
+  transform:translate(-50%,-50%) scale(1);
+  opacity:1;
+}
+.modal-hero{
+  position:relative;
+  height:360px;
+  overflow:hidden;
+}
+.modal-hero-bg{
+  position:absolute;inset:0;
+  background-size:cover;
+  background-position:center 20%;
+  filter:blur(0px);
+  transform:scale(1.03);
+}
+.modal-hero-gradient{
+  position:absolute;inset:0;
+  background:
+    linear-gradient(to bottom, transparent 0%, rgba(24,24,24,.7) 60%, #181818 100%),
+    linear-gradient(to right, rgba(24,24,24,.8) 0%, transparent 50%);
+}
+.modal-hero-cover{
+  position:absolute;
+  bottom:20px;left:32px;
+  width:110px;
+  border-radius:4px;
+  box-shadow:0 8px 30px rgba(0,0,0,.8);
+  border:2px solid rgba(255,255,255,.1);
+}
+.modal-hero-info{
+  position:absolute;
+  bottom:28px;left:162px;right:32px;
+}
+.modal-hero-title{
+  font-family:var(--font-display);
+  font-size:clamp(28px,4vw,46px);
+  letter-spacing:.5px;
+  line-height:.95;
+  margin-bottom:10px;
+  text-shadow:1px 2px 10px rgba(0,0,0,.6);
+}
+.modal-hero-author{
+  font-size:13px;color:var(--muted);
+  margin-bottom:10px;
+}
+.modal-hero-author strong{color:#fff}
+.modal-badges{
+  display:flex;gap:8px;flex-wrap:wrap;
+  margin-bottom:14px;
+}
+.modal-badge{
+  padding:3px 10px;
+  border-radius:2px;
+  font-size:10px;font-weight:700;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+}
+.badge-red{background:var(--red)}
+.badge-dark{
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.15);
+  color:var(--muted);
+}
+.badge-gold{background:var(--gold);color:#000}
+.modal-close{
+  position:absolute;top:16px;right:16px;
+  width:36px;height:36px;
+  border-radius:50%;
+  background:rgba(0,0,0,.6);
+  border:2px solid rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;line-height:1;
+  cursor:pointer;
+  transition:background .2s,transform .2s;
+  z-index:10;
+}
+.modal-close:hover{background:rgba(255,255,255,.15);transform:scale(1.08)}
+.modal-body{
+  padding:0 32px 32px;
+  overflow-y:auto;
+  max-height:calc(90vh - 360px);
+}
+.modal-summary{
+  font-size:14px;line-height:1.75;
+  color:#ccc;margin-bottom:24px;
+}
+.modal-stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:1px;
+  background:var(--border);
+  border-radius:6px;
+  overflow:hidden;
+  margin-bottom:24px;
+  border:1px solid var(--border);
+}
+.modal-stat{
+  background:#1e1e1e;
+  padding:14px 16px;
+  text-align:center;
+}
+.modal-stat-val{
+  font-family:var(--font-display);
+  font-size:22px;
+  letter-spacing:.5px;
+  color:#fff;
+}
+.modal-stat-label{
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  color:var(--muted);
+  margin-top:2px;
+}
+.modal-actions{
+  display:flex;gap:12px;flex-wrap:wrap;
+}
+.btn-read{
+  background:var(--red);
+  color:#fff;
+  padding:13px 28px;
+  border-radius:4px;
+  font-size:14px;font-weight:700;
+  letter-spacing:.5px;
+  display:inline-flex;align-items:center;gap:8px;
+  transition:background .2s,transform .15s;
+}
+.btn-read:hover{background:var(--red-dim);transform:scale(1.02)}
+.btn-read svg{width:18px;height:18px;fill:currentColor}
+.btn-buy{
+  background:rgba(255,255,255,.1);
+  color:#fff;
+  padding:13px 28px;
+  border-radius:4px;
+  font-size:14px;font-weight:600;
+  border:1px solid rgba(255,255,255,.2);
+  display:inline-flex;align-items:center;gap:8px;
+  transition:background .2s;
+}
+.btn-buy:hover{background:rgba(255,255,255,.18)}
+.btn-buy svg{width:16px;height:16px;fill:currentColor}
+.modal-price-note{
+  font-size:11px;color:var(--muted);
+  margin-top:10px;
+  display:flex;align-items:center;gap:6px;
+}
+.modal-price-note svg{width:12px;height:12px;fill:var(--muted)}
+
+/* ══════════════════════════════════════════
+   EMPTY STATE
+══════════════════════════════════════════ */
+.empty-state{
+  text-align:center;
+  padding:60px 20px;
+  color:var(--muted);
+}
+.empty-state .es-icon{
+  font-size:56px;margin-bottom:16px;opacity:.4;
+}
+.empty-state h3{
+  font-family:var(--font-display);
+  font-size:24px;letter-spacing:1px;
+  color:#555;margin-bottom:8px;
+}
+
+/* ══════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════ */
+footer{
+  border-top:1px solid var(--border);
+  padding:40px 48px;
+  color:var(--muted);
+  font-size:12px;
+}
+.footer-logo{
+  font-family:var(--font-display);
+  font-size:22px;
+  color:var(--red);
+  letter-spacing:2px;
+  margin-bottom:12px;
+}
+.footer-links{
+  display:flex;gap:20px;flex-wrap:wrap;
+  margin-bottom:16px;
+}
+.footer-links a{color:var(--muted);transition:color .2s}
+.footer-links a:hover{color:#fff}
+footer p{opacity:.5}
+
+/* ══════════════════════════════════════════
+   ANIMATIONS
+══════════════════════════════════════════ */
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(20px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.fade-up{animation:fadeUp .5s var(--ease) both}
+.fade-up:nth-child(2){animation-delay:.05s}
+.fade-up:nth-child(3){animation-delay:.1s}
+.fade-up:nth-child(4){animation-delay:.15s}
+.fade-up:nth-child(5){animation-delay:.2s}
+.fade-up:nth-child(6){animation-delay:.25s}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media(max-width:700px){
+  .nav{padding:0 20px}
+  .nav-links{display:none}
+  .hero-content{padding:0 28px 60px}
+  .sections{padding:0 20px 60px}
+  .genre-strip{padding:0 20px}
+  #search-results-section{padding:0 20px}
+  .card{width:130px}
+  .modal{width:98vw;top:auto;bottom:0;left:0;right:0;transform:translateY(100%);border-radius:12px 12px 0 0;max-height:92vh}
+  .modal.open{transform:translateY(0)}
+  .modal-hero{height:280px}
+  .modal-hero-cover{width:80px;left:20px}
+  .modal-hero-info{left:120px;bottom:20px}
+  .modal-body{padding:0 20px 24px;max-height:calc(92vh - 280px)}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ NAVBAR ══════════════════════════════════════ -->
+<nav class="nav" id="nav">
+  <div class="nav-logo">BOOKFLIX<span>~by paras</span></div>
+  <ul class="nav-links">
+    <li><a href="#" class="active" onclick="filterBooks('all',this)">Home</a></li>
+    <li><a href="#" onclick="filterBooks('trending',this)">Trending</a></li>
+    <li><a href="#" onclick="filterBooks('new',this)">New Arrivals</a></li>
+    <li><a href="#" onclick="filterBooks('classics',this)">Classics</a></li>
+    <li><a href="#" onclick="filterBooks('selfhelp',this)">Self Help</a></li>
+    <li><a href="#" onclick="filterBooks('finance',this)">Finance</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="nav-search-wrap">
+      <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+      <input type="text" id="search" placeholder="Search titles, authors…" autocomplete="off"/>
+    </div>
+    <div class="nav-avatar">PK</div>
+  </div>
+</nav>
+
+<!-- ══ HERO ════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-bg" id="heroBg"></div>
+  <div class="hero-gradient"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      FEATURED BOOK
+    </div>
+    <div class="hero-title" id="heroTitle">ATOMIC HABITS</div>
+    <div class="hero-meta">
+      <span class="match">98% Match</span>
+      <span>2018</span>
+      <span class="rating">BESTSELLER</span>
+      <span>320 pages</span>
+    </div>
+    <p class="hero-desc" id="heroDesc">A practical guide to building good habits and breaking bad ones to dramatically improve your life. Learn the system used by world-class performers.</p>
+    <div class="hero-author" id="heroAuthor">by <strong>James Clear</strong></div>
+    <div class="hero-btns">
+      <button class="btn btn-primary" id="heroReadBtn" onclick="openHeroModal()">
+        <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+        Read Now
+      </button>
+      <button class="btn btn-secondary" id="heroInfoBtn" onclick="openHeroModal()">
+        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        More Info
+      </button>
+    </div>
+  </div>
+  <div class="hero-indicators" id="heroDots"></div>
+</section>
+
+<!-- ══ GENRE CHIPS ══════════════════════════════════ -->
+<div class="genre-strip" id="genreStrip"></div>
+
+<!-- ══ SEARCH RESULTS ══════════════════════════════ -->
+<div id="search-results-section">
+  <div class="section-title" id="searchResultsTitle"></div>
+  <div class="search-grid" id="searchGrid"></div>
+</div>
+
+<!-- ══ MAIN SECTIONS ═══════════════════════════════ -->
+<div class="sections" id="mainSections"></div>
+
+<!-- ══ MODAL OVERLAY ═══════════════════════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="closeModal()"></div>
+
+<!-- ══ MODAL ════════════════════════════════════════ -->
+<div class="modal" id="modal">
+  <div class="modal-hero">
+    <div class="modal-hero-bg" id="modalBg"></div>
+    <div class="modal-hero-gradient"></div>
+    <img class="modal-hero-cover" id="modalCover" src="" alt=""/>
+    <div class="modal-hero-info">
+      <div class="modal-hero-title" id="modalTitle"></div>
+      <div class="modal-hero-author" id="modalAuthor"></div>
+      <div class="modal-badges" id="modalBadges"></div>
+    </div>
+    <div class="modal-close" onclick="closeModal()">✕</div>
+  </div>
+  <div class="modal-body">
+    <p class="modal-summary" id="modalSummary"></p>
+    <div class="modal-stats" id="modalStats"></div>
+    <div class="modal-actions" id="modalActions"></div>
+    <div class="modal-price-note" id="modalPriceNote"></div>
+  </div>
+</div>
+
+<!-- ══ FOOTER ═══════════════════════════════════════ -->
+<footer>
+  <div class="footer-logo">BOOKFLIX</div>
+  <div class="footer-links">
+    <a href="#">About</a><a href="#">FAQ</a><a href="#">Help Center</a>
+    <a href="#">Privacy</a><a href="#">Terms</a><a href="#">Contact</a>
+  </div>
+  <p>©️ 2025 BookFlix — Made by Paras. All reading rights respected.</p>
+</footer>
+
+<!-- ══════════════════════════════════════════════════
+     SCRIPT
+════════════════════════════════════════════════════ -->
+<script>
+/* ── DATA ─────────────────────────────────────────── */
+const BOOKS = [
+  {
+    id:1, title:"Atomic Habits", author:"James Clear",
+    category:["trending","selfhelp"],
+    image:"https://images-na.ssl-images-amazon.com/images/I/81ANaVZk5LL.jpg",
+    bg:"https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=1400&q=80",
+    summary:"A practical, actionable guide to building good habits and breaking bad ones. James Clear distills the science of self-improvement into a proven system used by Olympic athletes, business leaders, and everyday individuals.",
+    price:"₹349","pages":"320","year":"2018",
+    genre:"Self Help",match:"98%",
+    buyLink:"https://www.amazon.in/s?k=atomic+habits",
+    pdf:"https://ia801407.us.archive.org/28/items/AtomicHabits/Atomic%20Habits.pdf"
+  },
+  {
+    id:2, title:"Ikigai", author:"Héctor García & Francesc Miralles",
+    category:["trending","selfhelp"],
+    image:"https://images-na.ssl-images-amazon.com/images/I/81l3rZK4lnL.jpg",
+    bg:"https://images.unsplash.com/photo-1490730141103-6cac27aaab94?w=1400&q=80",
+    summary:"Discover the Japanese secret to a long and happy life. Ikigai is that sweet spot where passion, mission, vocation, and profession intersect — your reason for being that gets you out of bed each morning.",
+    price:"₹199","pages":"208","year":"2017",
+    genre:"Self Help",match:"95%",
+    buyLink:"https://www.amazon.in/s?k=ikigai",
+    pdf:"https://ia800101.us.archive.org/1/items/ikigai_202101/Ikigai.pdf"
+  },
+  {
+    id:3, title:"Rich Dad Poor Dad", author:"Robert T. Kiyosaki",
+    category:["new","finance"],
+    image:"https://images-na.ssl-images-amazon.com/images/I/81bsw6fnUiL.jpg",
+    bg:"https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=1400&q=80",
+    summary:"What the rich teach their kids about money that the poor and middle class do not. Kiyosaki challenges conventional thinking about money, work, and financial freedom through the contrasting advice of his two dads.",
+    price:"₹299","pages":"336","year":"1997",
+    genre:"Finance",match:"92%",
+    buyLink:"https://www.amazon.in/s?k=rich+dad+poor+dad",
+    pdf:"https://ia801600.us.archive.org/2/items/RichDadPoorDad_201811/Rich%20Dad%20Poor%20Dad.pdf"
+  },
+  {
+    id:4, title:"The Psychology of Money", author:"Morgan Housel",
+    category:["trending","finance"],
+    image:"https://images-na.ssl-images-amazon.com/images/I/71g2ednj0JL.jpg",
+    bg:"https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1400&q=80",
+    summary:"Timeless lessons on wealth, greed, and happiness. Through 19 short stories, Morgan Housel explores the strange ways people think about money and teaches you how to make better sense of one of life's most important topics.",
+    price:"₹399","pages":"256","year":"2020",
+    genre:"Finance",match:"96%",
+    buyLink:"https://www.amazon.in/s?k=psychology+of+money",
+    pdf:"https://ia903402.us.archive.org/1/items/the-psychology-of-money/The%20Psychology%20of%20Money.pdf"
+  },
+  {
+    id:5, title:"Think and Grow Rich", author:"Napoleon Hill",
+    category:["classics","finance"],
+    image:"https://images-na.ssl-images-amazon.com/images/I/61y04z8RVWL.jpg",
+    bg:"https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1400&q=80",
+    summary:"The world's most famous success philosophy, distilled from studying over 500 of America's most successful individuals. Napoleon Hill reveals the 13-step formula for turning desire into financial achievement.",
+    price:"₹199","pages":"320","year":"1937",
+    genre:"Classics",match:"90%",
+    buyLink:"https://www.amazon.in/s?k=think+and+grow+rich",
+    pdf:"https://ia800503.us.archive.org/19/items/ThinkAndGrowRich_738/Think-And-Grow-Rich.pdf"
+  },
+  {
+    id:6, title:"The Alchemist", author:"Paulo Coelho",
+    category:["classics","trending"],
+    image:"https://images-na.ssl-images-amazon.com/images/I/61HAE8zahLL.jpg",
+    bg:"https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=1400&q=80",
+    summary:"A magical fable about following your dream. Santiago, an Andalusian shepherd boy, journeys to the Egyptian pyramids in search of treasure, finding instead the true riches of the universe.",
+    price:"₹249","pages":"208","year":"1988",
+    genre:"Fiction",match:"97%",
+    buyLink:"https://www.amazon.in/s?k=the+alchemist",
+    pdf:"https://ia800304.us.archive.org/33/items/AlchemistPauloCoelho/Alchemist-Paulo-Coelho.pdf"
+  },
+  {
+    id:7, title:"Deep Work", author:"Cal Newport",
+    category:["new","selfhelp"],
+    image:"https://images-na.ssl-images-amazon.com/images/I/71QKQ9mwV7L.jpg",
+    bg:"https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1400&q=80",
+    summary:"Rules for focused success in a distracted world. Cal Newport argues that the ability to perform deep work is becoming increasingly rare while being increasingly valuable in our economy.",
+    price:"₹349","pages":"296","year":"2016",
+    genre:"Self Help",match:"93%",
+    buyLink:"https://www.amazon.in/s?k=deep+work",
+    pdf:"https://ia801406.us.archive.org/13/items/DeepWork_201810/DeepWork.pdf"
+  },
+  {
+    id:8, title:"Sapiens", author:"Yuval Noah Harari",
+    category:["trending","new"],
+    image:"https://images-na.ssl-images-amazon.com/images/I/713jIoMO3UL.jpg",
+    bg:"https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=1400&q=80",
+    summary:"A brief history of humankind. From the Stone Age to the 21st century, Harari explores how Homo sapiens came to dominate Earth — and asks where we go from here. Profoundly thought-provoking.",
+    price:"₹499","pages":"464","year":"2011",
+    genre:"History",match:"94%",
+    buyLink:"https://www.amazon.in/s?k=sapiens",
+    pdf:"https://ia803404.us.archive.org/14/items/in.ernet.dli.2015.282575/2015.282575.Sapiens.pdf"
+  },
+  {
+    id:9, title:"The Subtle Art", author:"Mark Manson",
+    category:["trending","selfhelp"],
+    image:"https://images-na.ssl-images-amazon.com/images/I/71QKQ9mwV7L.jpg",
+    bg:"https://images.unsplash.com/photo-1530124566582-a618bc2615dc?w=1400&q=80",
+    summary:"A counterintuitive approach to living a good life. Manson argues that improving our lives hinges not on positivity but on getting better at handling adversity, failure, and uncertainty.",
+    price:"₹299","pages":"224","year":"2016",
+    genre:"Self Help",match:"91%",
+    buyLink:"https://www.amazon.in/s?k=subtle+art+of+not+giving",
+    pdf:"https://ia801601.us.archive.org/11/items/TheSubtleArtOfNotGivingAF--kACounterIntuitiveApproachToLivingAGoodLife/The%20Subtle%20Art%20Of%20Not%20Giving%20A%20F%2Ak.pdf"
+  },
+  {
+    id:10, title:"Zero to One", author:"Peter Thiel",
+    category:["new","finance"],
+    image:"https://images-na.ssl-images-amazon.com/images/I/71RNyOsO8aL.jpg",
+    bg:"https://images.unsplash.com/photo-1559136555-9303baea8ebd?w=1400&q=80",
+    summary:"Notes on startups, or how to build the future. Thiel shows how to build companies that create new things rather than copying what already exists. Required reading for entrepreneurs.",
+    price:"₹399","pages":"224","year":"2014",
+    genre:"Finance",match:"89%",
+    buyLink:"https://www.amazon.in/s?k=zero+to+one+peter+thiel",
+    pdf:"https://ia800605.us.archive.org/3/items/ZeroToOne/Zero%20To%20One.pdf"
+  },
+  {
+    id:11, title:"1984", author:"George Orwell",
+    category:["classics"],
+    image:"https://images-na.ssl-images-amazon.com/images/I/71kXnWK4oNL.jpg",
+    bg:"https://images.unsplash.com/photo-1518770660439-4636190af475?w=1400&q=80",
+    summary:"A dystopian novel set in a totalitarian society where Big Brother watches every move. Orwell's masterpiece remains the most powerful warning against the dangers of totalitarianism ever written.",
+    price:"₹149","pages":"328","year":"1949",
+    genre:"Classics",match:"99%",
+    buyLink:"https://www.amazon.in/s?k=1984+george+orwell",
+    pdf:"https://ia801001.us.archive.org/24/items/in.ernet.dli.2015.2526/2015.2526.Nineteen-Eighty-Four.pdf"
+  },
+  {
+    id:12, title:"Thinking, Fast and Slow", author:"Daniel Kahneman",
+    category:["new","selfhelp"],
+    image:"https://images-na.ssl-images-amazon.com/images/I/61fdrEuPJwL.jpg",
+    bg:"https://images.unsplash.com/photo-1507537297725-24a1c029d3ca?w=1400&q=80",
+    summary:"Nobel laureate Daniel Kahneman reveals the two systems that drive the way we think — fast, intuitive System 1 and slow, deliberate System 2. A fascinating exploration of the mind's hidden biases.",
+    price:"₹449","pages":"499","year":"2011",
+    genre:"Psychology",match:"92%",
+    buyLink:"https://www.amazon.in/s?k=thinking+fast+and+slow",
+    pdf:"https://ia800306.us.archive.org/16/items/ThinkingFastAndSlow/Thinking%2C%20Fast%20and%20Slow.pdf"
+  }
+];
+
+/* ── STATE ────────────────────────────────────────── */
+let activeFilter = 'all';
+let heroBooks = BOOKS.filter(b => b.category.includes('trending'));
+let heroIdx = 0;
+let heroInterval;
+let currentHeroBook = heroBooks[0];
+
+/* ── NAV SCROLL ───────────────────────────────────── */
+window.addEventListener('scroll',()=>{
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+/* ── HERO ─────────────────────────────────────────── */
+function setHero(book){
+  currentHeroBook = book;
+  document.getElementById('heroBg').style.backgroundImage = `url(${book.bg})`;
+  document.getElementById('heroTitle').textContent = book.title.toUpperCase();
+  document.getElementById('heroDesc').textContent = book.summary;
+  document.getElementById('heroAuthor').innerHTML = `by <strong>${book.author}</strong>`;
+}
+
+function buildHeroDots(){
+  const wrap = document.getElementById('heroDots');
+  wrap.innerHTML = '';
+  heroBooks.forEach((b,i)=>{
+    const d = document.createElement('div');
+    d.className = 'hero-dot' + (i===heroIdx?' active':'');
+    d.onclick = ()=>{ heroIdx=i; setHero(heroBooks[i]); updateDots(); };
+    wrap.appendChild(d);
+  });
+}
+
+function updateDots(){
+  document.querySelectorAll('.hero-dot').forEach((d,i)=>{
+    d.className = 'hero-dot' + (i===heroIdx?' active':'');
+  });
+}
+
+function startHeroRotation(){
+  clearInterval(heroInterval);
+  heroInterval = setInterval(()=>{
+    heroIdx = (heroIdx+1) % heroBooks.length;
+    setHero(heroBooks[heroIdx]);
+    updateDots();
+  }, 6000);
+}
+
+function openHeroModal(){ showModal(currentHeroBook); }
+
+/* ── GENRE CHIPS ──────────────────────────────────── */
+const GENRES = [
+  {label:'All',val:'all'},
+  {label:'🔥 Trending',val:'trending'},
+  {label:'✨ New Arrivals',val:'new'},
+  {label:'📚 Classics',val:'classics'},
+  {label:'💪 Self Help',val:'selfhelp'},
+  {label:'💰 Finance',val:'finance'},
+];
+function buildGenreStrip(){
+  const strip = document.getElementById('genreStrip');
+  GENRES.forEach(g=>{
+    const chip = document.createElement('button');
+    chip.className = 'genre-chip' + (g.val==='all'?' active':'');
+    chip.textContent = g.label;
+    chip.onclick = ()=> filterBooks(g.val, chip);
+    strip.appendChild(chip);
+  });
+}
+
+/* ── FILTER ───────────────────────────────────────── */
+function filterBooks(cat, el){
+  activeFilter = cat;
+  // update chips
+  document.querySelectorAll('.genre-chip').forEach(c=>c.classList.remove('active'));
+  if(el && el.classList){ el.classList.add('active'); }
+  else{
+    document.querySelectorAll('.genre-chip').forEach(c=>{
+      if(c.textContent.toLowerCase().includes(cat==='all'?'all':cat)) c.classList.add('active');
+    });
+  }
+  // update nav links
+  document.querySelectorAll('.nav-links a').forEach(a=>a.classList.remove('active'));
+  if(el && el.tagName==='A') el.classList.add('active');
+  renderSections();
+}
+
+/* ── SECTION DEFINITIONS ──────────────────────────── */
+function getSections(){
+  const f = activeFilter;
+  const match = b => f==='all' || b.category.includes(f);
+
+  const sections = [];
+
+  const trending = BOOKS.filter(b=>b.category.includes('trending') && match(b));
+  if(trending.length) sections.push({title:'🔥 Trending Now', books:trending, top10:false});
+
+  const newArr = BOOKS.filter(b=>b.category.includes('new') && match(b));
+  if(newArr.length) sections.push({title:'✨ New Arrivals', books:newArr, top10:false});
+
+  const top10 = BOOKS.filter(match).slice(0,10);
+  if(top10.length) sections.push({title:'🏆 Top 10 Books This Week', books:top10, top10:true});
+
+  const classics = BOOKS.filter(b=>b.category.includes('classics') && match(b));
+  if(classics.length) sections.push({title:'📖 Timeless Classics', books:classics, top10:false});
+
+  const fin = BOOKS.filter(b=>b.category.includes('finance') && match(b));
+  if(fin.length) sections.push({title:'💰 Finance & Wealth', books:fin, top10:false});
+
+  const sh = BOOKS.filter(b=>b.category.includes('selfhelp') && match(b));
+  if(sh.length) sections.push({title:'🚀 Self Help & Growth', books:sh, top10:false});
+
+  if(!sections.length) sections.push({title:'Books', books:BOOKS.filter(match), top10:false});
+  return sections;
+}
+
+/* ── RENDER SECTIONS ──────────────────────────────── */
+function renderSections(){
+  const wrap = document.getElementById('mainSections');
+  wrap.innerHTML = '';
+  const secs = getSections();
+  if(!secs[0].books.length){
+    wrap.innerHTML = `<div class="empty-state"><div class="es-icon">📚</div><h3>No books found</h3><p>Try a different filter</p></div>`;
+    return;
+  }
+  secs.forEach(sec=>{
+    const s = document.createElement('div');
+    s.className = 'section';
+    s.innerHTML = `<div class="section-header"><div class="section-title">${sec.title}</div><span class="section-see-all">See All</span></div>`;
+    const row = document.createElement('div');
+    row.className = 'row';
+    sec.books.forEach((book,i)=>{
+      row.appendChild(buildCard(book, sec.top10 ? i+1 : null));
+    });
+    s.appendChild(row);
+    wrap.appendChild(s);
+  });
+}
+
+/* ── BUILD CARD ───────────────────────────────────── */
+function buildCard(book, rank){
+  const card = document.createElement('div');
+  card.className = 'card fade-up';
+  card.innerHTML = `
+    <div class="card-img-wrap">
+      <img src="${book.image}" alt="${book.title}" loading="lazy" onerror="this.src='https://via.placeholder.com/160x240/1a1a1a/555?text=📚'"/>
+      <div class="card-shine"></div>
+    </div>
+    ${rank ? `<div class="top-badge">${rank}</div>` : ''}
+    <div class="card-panel">
+      <div class="card-panel-btns">
+        <button class="cp-btn cp-play" title="Read Now">
+          <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+        </button>
+        <button class="cp-btn cp-add" title="Add to List">
+          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        </button>
+        <button class="cp-btn cp-info" title="More Info" onclick="event.stopPropagation()">
+          <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+        </button>
+      </div>
+      <div class="card-panel-title">${book.title}</div>
+      <div class="card-panel-meta">
+        <span class="match" style="color:#46d369;font-size:10px;font-weight:600">${book.match}</span>
+        <span>${book.year}</span>
+        <span class="card-panel-cat">${book.genre}</span>
+      </div>
+    </div>`;
+  card.onclick = ()=> showModal(book);
+  return card;
+}
+
+/* ── MODAL ────────────────────────────────────────── */
+function showModal(book){
+  document.getElementById('modalBg').style.backgroundImage = `url(${book.bg})`;
+  document.getElementById('modalCover').src = book.image;
+  document.getElementById('modalCover').alt = book.title;
+  document.getElementById('modalTitle').textContent = book.title;
+  document.getElementById('modalAuthor').innerHTML = `by <strong>${book.author}</strong>`;
+  document.getElementById('modalSummary').textContent = book.summary;
+
+  // badges
+  const badges = document.getElementById('modalBadges');
+  badges.innerHTML = '';
+  const cats = book.category;
+  if(cats.includes('trending')) badges.innerHTML += `<span class="modal-badge badge-red">🔥 Trending</span>`;
+  if(cats.includes('new'))      badges.innerHTML += `<span class="modal-badge badge-gold">✨ New</span>`;
+  if(cats.includes('classics')) badges.innerHTML += `<span class="modal-badge badge-dark">Classic</span>`;
+  badges.innerHTML += `<span class="modal-badge badge-dark">${book.match} Match</span>`;
+  badges.innerHTML += `<span class="modal-badge badge-dark">${book.genre}</span>`;
+
+  // stats
+  document.getElementById('modalStats').innerHTML = `
+    <div class="modal-stat"><div class="modal-stat-val">${book.pages}</div><div class="modal-stat-label">Pages</div></div>
+    <div class="modal-stat"><div class="modal-stat-val">${book.year}</div><div class="modal-stat-label">Published</div></div>
+    <div class="modal-stat"><div class="modal-stat-val" style="color:#f5c518">${book.price}</div><div class="modal-stat-label">Est. Price</div></div>`;
+
+  // actions
+  document.getElementById('modalActions').innerHTML = `
+    <a class="btn-read" href="${book.pdf}" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+      Read Free PDF
+    </a>
+    <a class="btn-buy" href="${book.buyLink}" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96C5 16.1 6.9 18 9 18h12v-2H9.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63H19c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0 0 23.45 5H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/></svg>
+      Buy on Amazon
+    </a>`;
+
+  document.getElementById('modalPriceNote').innerHTML = `
+    <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+    Price is approximate. Click "Buy on Amazon" for current pricing.`;
+
+  document.getElementById('modal').classList.add('open');
+  document.getElementById('modalOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(){
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('modalOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal(); });
+
+/* ── SEARCH ───────────────────────────────────────── */
+document.getElementById('search').addEventListener('input', function(){
+  const q = this.value.trim().toLowerCase();
+  const sec = document.getElementById('search-results-section');
+  const mainSec = document.getElementById('mainSections');
+  const genreStrip = document.getElementById('genreStrip');
+
+  if(!q){
+    sec.style.display = 'none';
+    mainSec.style.display = '';
+    genreStrip.style.display = '';
+    return;
+  }
+
+  const results = BOOKS.filter(b =>
+    b.title.toLowerCase().includes(q) ||
+    b.author.toLowerCase().includes(q) ||
+    b.genre.toLowerCase().includes(q) ||
+    b.summary.toLowerCase().includes(q)
+  );
+
+  mainSec.style.display = 'none';
+  genreStrip.style.display = 'none';
+  sec.style.display = 'block';
+  document.getElementById('searchResultsTitle').innerHTML =
+    `<span class="section-title">Search results for "<span style="color:var(--red)">${this.value}</span>" — ${results.length} found</span>`;
+
+  const grid = document.getElementById('searchGrid');
+  grid.innerHTML = '';
+  if(!results.length){
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="es-icon">🔍</div><h3>No results</h3><p>Try a different search term</p></div>`;
+    return;
+  }
+  results.forEach(b => grid.appendChild(buildCard(b, null)));
+});
+
+/* ── INIT ─────────────────────────────────────────── */
+(function init(){
+  setHero(heroBooks[0]);
+  buildHeroDots();
+  startHeroRotation();
+  buildGenreStrip();
+  renderSections();
+})();
+</script>
+</body>
+</html>
